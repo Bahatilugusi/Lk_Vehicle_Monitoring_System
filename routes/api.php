@@ -42,42 +42,49 @@ Route::middleware('auth:sanctum')->group(function () {
     // Fleet, Driver, Trip, GPS routes will be added here next
 
 });
-
+// =========================================================
+// PROTECTED ROUTES - Valid Sanctum token required
+// =========================================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::prefix('drivers')->name('drivers.')->group(function () {
-
-        //  Specific named routes MUST come before {driver} wildcard
-        Route::get('available', [DriverController::class, 'available'])->name('available');
-
-        // Core CRUD
-        Route::get('/',          [DriverController::class, 'index'])->name('index');
-        Route::post('/',         [DriverController::class, 'store'])->name('store');
-        Route::get('{driver}',   [DriverController::class, 'show'])->name('show');
-        Route::put('{driver}',   [DriverController::class, 'update'])->name('update');
-        Route::delete('{driver}',[DriverController::class, 'destroy'])->name('destroy');
-
-        // Driver operations
-        Route::patch('{driver}/status',          [DriverController::class, 'updateStatus'])->name('status');
-        Route::post('{driver}/assign-vehicle',   [DriverController::class, 'assignVehicle'])->name('assign-vehicle');
-        Route::patch('{driver}/release-vehicle', [DriverController::class, 'releaseVehicle'])->name('release-vehicle');
-        Route::get('{driver}/assignments',       [DriverController::class, 'assignmentHistory'])->name('assignments');
+    // ================= AUTH =================
+    Route::prefix('auth')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me', [AuthController::class, 'me']);
+        Route::post('register', [AuthController::class, 'register']);
     });
 
-      // Trip & Dispatch Management
-Route::prefix('trips')->group(function () {
-    Route::get('/',    [TripController::class, 'index']);
-    Route::post('/',   [TripController::class, 'store']);
-    Route::get('/{trip}',    [TripController::class, 'show']);
-    Route::put('/{trip}',    [TripController::class, 'update']);
-    Route::delete('/{trip}', [TripController::class, 'destroy']);
+    // ================= DRIVERS =================
+    Route::prefix('drivers')->name('drivers.')->group(function () {
 
-    // Lifecycle actions
-    Route::post('/{trip}/start',    [TripController::class, 'start']);
-    Route::post('/{trip}/complete', [TripController::class, 'complete']);
-    Route::post('/{trip}/cancel',   [TripController::class, 'cancel']);
-});
-  
+        Route::get('available', [DriverController::class, 'available'])->name('available');
+
+        Route::get('/',          [DriverController::class, 'index']);
+        Route::post('/',         [DriverController::class, 'store']);
+        Route::get('{driver}',   [DriverController::class, 'show']);
+        Route::put('{driver}',   [DriverController::class, 'update']);
+        Route::delete('{driver}',[DriverController::class, 'destroy']);
+
+        Route::patch('{driver}/status', [DriverController::class, 'updateStatus']);
+        Route::post('{driver}/assign-vehicle', [DriverController::class, 'assignVehicle']);
+        Route::patch('{driver}/release-vehicle', [DriverController::class, 'releaseVehicle']);
+        Route::get('{driver}/assignments', [DriverController::class, 'assignmentHistory']);
+    });
+
+    // ================= TRIPS (FIXED) =================
+    Route::prefix('trips')->group(function () {
+
+        Route::get('/',    [TripController::class, 'index']);
+        Route::post('/',   [TripController::class, 'store']);
+
+        Route::get('{trip}',    [TripController::class, 'show']);
+        Route::put('{trip}',    [TripController::class, 'update']);
+        Route::delete('{trip}', [TripController::class, 'destroy']);
+
+        Route::post('{trip}/start',    [TripController::class, 'start']);
+        Route::post('{trip}/complete', [TripController::class, 'complete']);
+        Route::post('{trip}/cancel',   [TripController::class, 'cancel']);
+    });
 
 });
 

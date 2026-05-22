@@ -75,7 +75,7 @@ class Trip extends Model
         return $this->belongsTo(User::class, 'dispatched_by');
     }
 
-    public function gpsPoints(): HasMany
+   /* public function gpsPoints(): HasMany
     {
         return $this->hasMany(GpsTracking::class);
     }
@@ -85,7 +85,7 @@ class Trip extends Model
         return $this->hasMany(GpsTracking::class)
                     ->latest('recorded_at')
                     ->limit(1);
-    }
+    }*/
 
     // =========================================================
     // STATUS HELPERS

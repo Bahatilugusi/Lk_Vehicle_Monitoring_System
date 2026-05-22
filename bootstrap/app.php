@@ -12,28 +12,35 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+
     ->withMiddleware(function (Middleware $middleware) {
 
-        // Sanctum middleware for API authentication
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
 
-        // Middleware aliases
         $middleware->alias([
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
         ]);
 
     })
+
     ->withExceptions(function (Exceptions $exceptions) {
 
-        // ✅ FIX: Prevent "route login not defined" crash
-        $exceptions->render(function (AuthenticationException $e, $request) {
+        $exceptions->render(function (
+            AuthenticationException $e,
+            $request
+        ) {
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated'
-            ], 401);
+            if ($request->expectsJson()) {
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+
+            }
+
         });
 
     })->create();

@@ -7,6 +7,7 @@ use App\Services\TripService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Http\Requests\StoreTripRequest;
 
 class TripController extends Controller
 {
@@ -33,36 +34,28 @@ class TripController extends Controller
     // CREATE TRIP
     // POST /api/trips
     // =========================================================
-    public function store(Request $request): JsonResponse
-    {
-        try {
-            $trip = Trip::create([
-                'trip_code'        => Trip::generateTripCode(),
-                'driver_id'        => $request->driver_id,
-                'vehicle_id'       => $request->vehicle_id,
-                'route_id'         => $request->route_id,
-                'origin'           => $request->origin,
-                'destination'      => $request->destination,
-                'scheduled_start'  => $request->scheduled_start,
-                'passengers_count' => $request->passengers_count,
-                'notes'            => $request->notes,
-                'dispatched_by'    => auth()->id(),
-                'status'           => 'scheduled',
-            ]);
+public function store(StoreTripRequest $request): JsonResponse
+{
+    try {
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Trip created successfully.',
-                'data' => $trip
-            ], 201);
+        $trip = $this->tripService->createTrip(
+            $request->validated()
+        );
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Trip created successfully.',
+            'data' => $trip
+        ], 201);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
     // =========================================================
     // SHOW TRIP

@@ -26,19 +26,27 @@ class TripService
             $data['destination'] = $route->destination;
         }
 
-        return DB::transaction(function () use ($data) {
-            return Trip::create([
-                'trip_code'       => Trip::generateTripCode(),
-                'dispatched_by'   => Auth::id(),
-                'driver_id'       => $data['driver_id'],
-                'vehicle_id'      => $data['vehicle_id'],
-                'route_id'        => $data['route_id'] ?? null,
-                'scheduled_start' => $data['scheduled_start'],
-                'passengers_count'=> $data['passengers_count'] ?? null,
-                'notes'           => $data['notes'] ?? null,
-                'status'          => 'scheduled',
-            ]);
-        });
+return DB::transaction(function () use ($data) {
+
+    return Trip::create([
+        'trip_code'        => Trip::generateTripCode(),
+        'dispatched_by'    => Auth::id(),
+
+        'driver_id'        => $data['driver_id'],
+        'vehicle_id'       => $data['vehicle_id'],
+        'route_id'         => $data['route_id'] ?? null,
+
+        'origin'           => $data['origin'],
+        'destination'      => $data['destination'],
+
+        'scheduled_start'  => $data['scheduled_start'],
+        'passengers_count' => $data['passengers_count'] ?? null,
+        'notes'            => $data['notes'] ?? null,
+
+        'status'           => 'scheduled',
+    ]);
+
+});
     }
 
     /**
@@ -178,37 +186,37 @@ class TripService
      */
     public function getTripDetails(Trip $trip): Trip
     {
-        return $trip->load(['driver.user', 'vehicle', 'route', 'dispatcher', 'gpsPoints']);
+        return $trip->load(['driver.user', 'vehicle', 'route', 'dispatcher']);
     }
 
     // =========================================================
     // PRIVATE GUARD METHODS
     // =========================================================
 
-    private function ensureDriverIsAvailable(int $driverId): void
-    {
-        $driver = Driver::findOrFail($driverId);
+  private function ensureDriverIsAvailable(int $driverId): void
+{
+    $driver = Driver::findOrFail($driverId);
 
-        if ($driver->status !== 'available') {
-            throw new \Exception(
-                "Driver is not available. Current status: {$driver->status}."
-            );
-        }
-
-        $hasActiveTrip = Trip::where('driver_id', $driverId)
-                             ->whereIn('status', ['scheduled', 'in_progress'])
-                             ->exists();
-
-        if ($hasActiveTrip) {
-            throw new \Exception('This driver already has an active or scheduled trip.');
-        }
+    if ($driver->status !== 'available') {
+        throw new \Exception("Driver is not available. Current status: {$driver->status}.");
     }
+
+    $hasActiveTrip = Trip::where('driver_id', $driverId)
+        ->whereNull('deleted_at') // ✅ ADD THIS
+        ->whereIn('status', ['scheduled', 'in_progress'])
+        ->exists();
+
+    if ($hasActiveTrip) {
+        throw new \Exception('This driver already has an active or scheduled trip.');
+    }
+}
 
     private function ensureVehicleIsAvailable(int $vehicleId): void
     {
-        $hasActiveTrip = Trip::where('vehicle_id', $vehicleId)
-                             ->whereIn('status', ['scheduled', 'in_progress'])
-                             ->exists();
+$hasActiveTrip = Trip::where('vehicle_id', $vehicleId)
+    ->whereNull('deleted_at') // ✅ ADD THIS
+    ->whereIn('status', ['scheduled', 'in_progress'])
+    ->exists();
 
         if ($hasActiveTrip) {
             throw new \Exception('This vehicle is already assigned to another active trip.');
